@@ -7,6 +7,8 @@ export async function GET(
   { params }: { params: Promise<{ repo: string }> }
 ) {
   const { repo } = await params;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
 
   try {
     const res = await fetch(
@@ -19,6 +21,7 @@ export async function GET(
           }),
         },
         next: { revalidate: 3600 },
+        signal: controller.signal,
       }
     );
 
@@ -43,5 +46,7 @@ export async function GET(
       { error: "Failed to fetch repository data" },
       { status: 502 }
     );
+  } finally {
+    clearTimeout(timeout);
   }
 }
